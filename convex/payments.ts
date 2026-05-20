@@ -65,70 +65,29 @@ export const createPendingEntry = mutation({
       throw new Error("Invalid entry count");
     }
 
-    // Determine if this is a direct purchase or raffle entry
-    const isDirectPurchase = productId === "raffle" ||
-      productId === "mv-hoodie" ||
-      productId === "mv-tee" ||
-      productId === "p6" ||
-      productId === "p7" ||
-      productId === "p1b" ||
-      productId === "p1w" ||
-      productId === "box-logo-zipper" ||
-      productId === "box-logo-beanie" ||
-      (productId?.startsWith("mv-v2-tee-") ?? false);
-
     let amount: number;
 
-    if (isDirectPurchase) {
-      // Direct purchase pricing - calculate from product ID
-      if (productId === "mv-hoodie") {
-        amount = 170000; // $1,700.00 in cents
-      } else if (productId === "mv-tee") {
-        amount = 35000; // $350.00 in cents
-      } else if (productId === "p6") {
-        amount = 170000; // $1,700.00 in cents
-      } else if (productId === "p7") {
-        amount = 170000; // $1,700.00 in cents
-      } else if (productId === "p1b") {
-        amount = 35000; // $350.00 in cents
-      } else if (productId === "p1w") {
-        amount = 35000; // $350.00 in cents
-      } else if (productId === "raffle") {
-        amount = 10000; // $100.00 in cents
-      } else if (productId?.startsWith("mv-v2-tee-")) {
-        amount = 6500; // $65.00 in cents
-      } else if (productId === "box-logo-zipper" || productId === "box-logo-beanie") {
-        amount = 8500; // $85.00 in cents
-      } else {
-        amount = 6500; // Safe default for unknown direct products
-      }
+    // Product-based pricing
+    if (productId === "mv-hoodie") {
+      amount = 170000; // $1,700.00 in cents
+    } else if (productId === "mv-tee") {
+      amount = 35000; // $350.00 in cents
+    } else if (productId === "p6") {
+      amount = 170000; // $1,700.00 in cents
+    } else if (productId === "p7") {
+      amount = 170000; // $1,700.00 in cents
+    } else if (productId === "p1b") {
+      amount = 35000; // $350.00 in cents
+    } else if (productId === "p1w") {
+      amount = 35000; // $350.00 in cents
+    } else if (productId === "raffle") {
+      amount = 10000; // $100.00 in cents
+    } else if (productId?.startsWith("mv-v2-tee-")) {
+      amount = 6500; // $65.00 in cents
+    } else if (productId === "box-logo-zipper" || productId === "box-logo-beanie") {
+      amount = 8500; // $85.00 in cents
     } else {
-      // Raffle entry pricing - need raffle config
-      const activeRaffle = await ctx.db
-        .query("raffleConfig")
-        .withIndex("by_active", (q) => q.eq("isActive", true))
-        .first();
-
-      if (!activeRaffle) {
-        throw new Error("No active raffle found");
-      }
-
-      // Check if raffle is accepting entries (use paymentStartDate for payments)
-      const now = Date.now();
-      const paymentStart = activeRaffle.paymentStartDate || activeRaffle.startDate;
-
-      // For payments: check paymentStartDate vs endDate
-      // This allows payments to work even if timer hasn't started yet
-      if (now < paymentStart || now > activeRaffle.endDate) {
-        throw new Error("Raffle is not currently accepting entries");
-      }
-
-      // Calculate amount based on bundle or individual pricing
-      if (bundle && count === activeRaffle.bundleSize) {
-        amount = activeRaffle.bundlePrice;
-      } else {
-        amount = count * activeRaffle.pricePerEntry;
-      }
+      amount = 6500; // Default price
     }
 
     // Create pending entry
@@ -196,32 +155,6 @@ export const handlePaymentSuccess = mutation({
       stripePaymentIntent,
     });
 
-    // Determine if this is a direct purchase or raffle entry
-    const isDirectPurchase = entry.productId === "raffle" ||
-      entry.productId === "mv-hoodie" ||
-      entry.productId === "mv-tee" ||
-      entry.productId === "p6" ||
-      entry.productId === "p7" ||
-      entry.productId === "p1b" ||
-      entry.productId === "p1w" ||
-      entry.productId === "box-logo-zipper" ||
-      entry.productId === "box-logo-beanie" ||
-      (entry.productId?.startsWith("mv-v2-tee-") ?? false);
-
-    // Only update raffle entries for actual raffle purchases
-    if (!isDirectPurchase) {
-      // Update raffle total entries
-      const activeRaffle = await ctx.db
-        .query("raffleConfig")
-        .withIndex("by_active", (q) => q.eq("isActive", true))
-        .first();
-
-      if (activeRaffle) {
-        await ctx.db.patch(activeRaffle._id, {
-          totalEntries: activeRaffle.totalEntries + entry.count,
-        });
-      }
-    }
 
     // Log the webhook event
     await ctx.db.insert("paymentEvents", {
@@ -237,35 +170,20 @@ export const handlePaymentSuccess = mutation({
       createdAt: Date.now(),
     });
 
-    console.log(`Payment completed for ${entry.email}: ${isDirectPurchase ? 'Direct purchase' : entry.count + ' entries'}`);
-
-    // Only assign raffle tickets for actual raffle purchases
-    if (!isDirectPurchase) {
-      try {
-        await ctx.runMutation(api.raffleTickets.assignTicketsToEntry, {
-          entryId: entry._id,
-        });
-        console.log(`🎫 Assigned ${entry.count} raffle tickets to ${entry.email}`);
-      } catch (ticketError) {
-        console.error('Failed to assign raffle tickets:', ticketError);
-        // Don't fail the payment processing if ticket assignment fails
-      }
-    }
+    console.log(`Payment completed for ${entry.email}: ${entry.productId ? getProductName(entry.productId) : 'Purchase'}`);
 
     // Queue confirmation email for processing
     try {
-      const emailSubject = isDirectPurchase
-        ? `🛒 Order Confirmed - ${entry.productId ? getProductName(entry.productId) : 'Your Purchase'}`
-        : `🏆 Gold Rush Entry Confirmed - ${entry.count} ${entry.count === 1 ? 'Entry' : 'Entries'} Secured`;
+      const emailSubject = `🛒 Order Confirmed - ${entry.productId ? getProductName(entry.productId) : 'Your Purchase'}`;
 
       await ctx.runMutation(api.emailLogs.createEmailLog, {
         to: entry.email,
         subject: emailSubject,
-        message: isDirectPurchase ? 'Order confirmation email - queued for sending' : 'Purchase confirmation email - queued for sending',
+        message: 'Order confirmation email - queued for sending',
         data: JSON.stringify({
           entryId: entry._id,
           count: entry.count,
-          type: isDirectPurchase ? 'order_confirmation' : 'purchase_confirmation',
+          type: 'order_confirmation',
           productId: entry.productId,
           size: entry.size,
           color: entry.variantColor
@@ -273,7 +191,7 @@ export const handlePaymentSuccess = mutation({
         status: 'pending',
         sentAt: Date.now(),
       });
-      console.log(`📅 ${isDirectPurchase ? 'Order' : 'Purchase'} confirmation email queued for ${entry.email}`);
+      console.log(`📅 Order confirmation email queued for ${entry.email}`);
     } catch (emailError) {
       console.error('Failed to queue confirmation email:', emailError);
       // Don't fail the payment processing if email queuing fails

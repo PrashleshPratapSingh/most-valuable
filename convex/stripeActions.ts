@@ -40,101 +40,62 @@ export const createCheckoutSession: any = action({
   handler: async (ctx, args) => {
     const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-    // Determine if this is a direct purchase or raffle entry
-    const isDirectPurchase = args.purchaseType === "direct" ||
-      args.productId === "raffle" ||
-      args.productId === "mv-hoodie" ||
-      args.productId === "mv-tee" ||
-      args.productId === "p6" ||
-      args.productId === "p7" ||
-      args.productId === "p1b" ||
-      args.productId === "p1w" ||
-      (args.productId?.startsWith("mv-v2-tee-") ?? false);
-
-    // Calculate pricing based on purchase type
+    // Calculate pricing based on product
     let unitAmount: number;
     let productName: string;
     let productDescription: string;
 
-    if (isDirectPurchase) {
-      // Direct purchase pricing
-      if (args.productId === "mv-hoodie") {
-        unitAmount = 170000; // $1,700.00 in cents
-        productName = "MV Members Only Hoodie";
-        productDescription = `Premium hoodie - ${args.selectedColor || 'Black'} (Size: ${args.selectedSize || 'M'}) - 7g Gold Included`;
-      } else if (args.productId === "mv-tee") {
-        unitAmount = 35000; // $350.00 in cents
-        productName = "MV Members Only Tee";
-        productDescription = `Exclusive tee - ${args.selectedColor || 'Black'} (Size: ${args.selectedSize || 'M'}) - 1g Gold Included`;
-      } else if (args.productId === "p6") {
-        unitAmount = 170000; // $1,700.00 in cents
-        productName = "Most Valuable Box Logo Hoodie";
-        productDescription = `Premium box logo hoodie (Size: ${args.selectedSize || 'M'}) - 7g Gold Included`;
-      } else if (args.productId === "p7") {
-        unitAmount = 170000; // $1,700.00 in cents
-        productName = "MV Traditional Hoodie";
-        productDescription = `Traditional MV hoodie (Size: ${args.selectedSize || 'M'}) - 7g Gold Included`;
-      } else if (args.productId === "p1b") {
-        unitAmount = 35000; // $350.00 in cents
-        productName = "Box Logo Tee - Black";
-        productDescription = `Iconic box logo tee in black (Size: ${args.selectedSize || 'M'}) - 1g Gold Included`;
-      } else if (args.productId === "p1w") {
-        unitAmount = 35000; // $350.00 in cents
-        productName = "Box Logo Tee - White";
-        productDescription = `Iconic box logo tee in white (Size: ${args.selectedSize || 'M'}) - 1g Gold Included`;
-      } else if (args.productId?.startsWith("mv-v2-tee-")) {
-        const colorNames: Record<string, string> = {
-          'mv-v2-tee-1': 'Black',
-          'mv-v2-tee-3': 'Gold',
-          'mv-v2-tee-4': 'Red',
-          'mv-v2-tee-5': 'White',
-        };
-        const colorName = colorNames[args.productId] || 'Signature';
-        unitAmount = 6500; // $65.00 in cents
-        productName = `A Valuable Shirt - ${colorName}`;
-        productDescription = `Premium heavyweight cotton tee from the Version 2.0 collection (Size: ${args.selectedSize || 'M'})`;
-      } else if (args.productId === "raffle") {
-        unitAmount = 10000; // $100.00 in cents
-        productName = "A Valuable Shirt";
-        productDescription = `A Valuable Shirt (Size: ${args.selectedSize || 'M'}) - Direct Purchase`;
-      } else {
-        unitAmount = 170000; // Default direct purchase price - $1,700.00 in cents
-        productName = "Direct Purchase";
-        productDescription = "Premium collection item";
-      }
+    if (args.productId === "mv-hoodie") {
+      unitAmount = 170000; // $1,700.00 in cents
+      productName = "MV Members Only Hoodie";
+      productDescription = `Premium hoodie - ${args.selectedColor || 'Black'} (Size: ${args.selectedSize || 'M'}) - 7g Gold Included`;
+    } else if (args.productId === "mv-tee") {
+      unitAmount = 35000; // $350.00 in cents
+      productName = "MV Members Only Tee";
+      productDescription = `Exclusive tee - ${args.selectedColor || 'Black'} (Size: ${args.selectedSize || 'M'}) - 1g Gold Included`;
+    } else if (args.productId === "p6") {
+      unitAmount = 170000; // $1,700.00 in cents
+      productName = "Most Valuable Box Logo Hoodie";
+      productDescription = `Premium box logo hoodie (Size: ${args.selectedSize || 'M'}) - 7g Gold Included`;
+    } else if (args.productId === "p7") {
+      unitAmount = 170000; // $1,700.00 in cents
+      productName = "MV Traditional Hoodie";
+      productDescription = `Traditional MV hoodie (Size: ${args.selectedSize || 'M'}) - 7g Gold Included`;
+    } else if (args.productId === "p1b") {
+      unitAmount = 35000; // $350.00 in cents
+      productName = "Box Logo Tee - Black";
+      productDescription = `Iconic box logo tee in black (Size: ${args.selectedSize || 'M'}) - 1g Gold Included`;
+    } else if (args.productId === "p1w") {
+      unitAmount = 35000; // $350.00 in cents
+      productName = "Box Logo Tee - White";
+      productDescription = `Iconic box logo tee in white (Size: ${args.selectedSize || 'M'}) - 1g Gold Included`;
+    } else if (args.productId?.startsWith("mv-v2-tee-")) {
+      const colorNames: Record<string, string> = {
+        'mv-v2-tee-1': 'Black',
+        'mv-v2-tee-3': 'Gold',
+        'mv-v2-tee-4': 'Red',
+        'mv-v2-tee-5': 'White',
+      };
+      const colorName = colorNames[args.productId] || 'Signature';
+      unitAmount = 6500; // $65.00 in cents
+      productName = `A Valuable Shirt - ${colorName}`;
+      productDescription = `Premium heavyweight cotton tee from the Version 2.0 collection (Size: ${args.selectedSize || 'M'})`;
+    } else if (args.productId === "raffle") {
+      unitAmount = 10000; // $100.00 in cents
+      productName = "A Valuable Shirt";
+      productDescription = `A Valuable Shirt (Size: ${args.selectedSize || 'M'})`;
+    } else if (args.productId === "box-logo-zipper") {
+      unitAmount = 8500; // $85.00 in cents
+      productName = "Box Logo Zipper";
+      productDescription = `Box Logo Zipper (Size: ${args.selectedSize || 'M'})`;
+    } else if (args.productId === "box-logo-beanie") {
+      unitAmount = 8500; // $85.00 in cents
+      productName = "Box Logo Beanie";
+      productDescription = `Box Logo Beanie`;
     } else {
-      // Raffle entry pricing - need raffle config
-      const raffle = await ctx.runQuery(api.payments.getRaffleConfig);
-      if (!raffle) {
-        throw new Error("No active raffle found");
-      }
-
-      // Check if raffle is accepting entries (use paymentStartDate for payments)
-      const now = Date.now();
-      // Use internal config to access paymentStartDate
-      const raffleInternal = await ctx.runQuery(api.payments.getRaffleConfigInternal);
-      const paymentStart = raffleInternal?.paymentStartDate || raffle.startDate;
-
-      // For payments: check paymentStartDate vs endDate
-      // This allows payments to work even if timer display hasn't started yet
-      if (now < paymentStart || now > raffle.endDate) {
-        throw new Error("Raffle is not currently accepting entries");
-      }
-
-      // Validate entry count
-      if (args.count <= 0 || args.count > 100) {
-        throw new Error("Invalid entry count");
-      }
-
-      if (args.bundle && args.count === raffle.bundleSize) {
-        unitAmount = raffle.bundlePrice;
-        productName = `${raffle.productName} - Bundle (${raffle.bundleSize} entries)`;
-        productDescription = `${args.count} raffle ${args.count === 1 ? 'entry' : 'entries'} for ${raffle.productName}`;
-      } else {
-        unitAmount = args.count * raffle.pricePerEntry;
-        productName = `${raffle.productName} - ${args.count} ${args.count === 1 ? 'entry' : 'entries'}`;
-        productDescription = `${args.count} raffle ${args.count === 1 ? 'entry' : 'entries'} for ${raffle.productName}`;
-      }
+      unitAmount = 6500; // Default price - $65.00 in cents
+      productName = "Direct Purchase";
+      productDescription = "Premium collection item";
     }
 
     // Step 1: Create Stripe checkout session
@@ -167,12 +128,10 @@ export const createCheckoutSession: any = action({
           ...(args.email ? { email: args.email } : {}),
           phone: args.phone || '',
           count: args.count.toString(),
-          bundle: (args.bundle || false).toString(),
-          purchaseType: isDirectPurchase ? 'direct' : 'raffle',
+          purchaseType: 'direct',
           ...(args.productId ? { productId: args.productId } : {}),
           ...(args.selectedColor ? { selectedColor: args.selectedColor } : {}),
           ...(args.selectedSize ? { selectedSize: args.selectedSize } : {}),
-          raffleId: isDirectPurchase ? 'none' : 'current',
         },
         expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
         locale: 'auto',
