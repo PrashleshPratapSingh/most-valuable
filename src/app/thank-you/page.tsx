@@ -1,7 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function ThankYouPage() {
+function ThankYouContent() {
+  const searchParams = useSearchParams();
+  // Stripe passes metadata back via success_url; we also append purchaseType ourselves
+  const purchaseType = searchParams.get("type") || "direct";
+  const isRaffle = purchaseType === "raffle";
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-black text-white">
       <div className="mx-auto w-full max-w-xl px-6 text-center">
@@ -35,35 +44,58 @@ export default function ThankYouPage() {
         </div>
 
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          🎉 You&apos;re In!
+          {isRaffle ? "🎉 You're In!" : "🛍️ Order Confirmed!"}
         </h1>
-        
+
         <p className="mt-4 text-lg text-white/90">
-          Payment successful — your raffle entries have been recorded.
+          {isRaffle
+            ? "Payment successful — your raffle entries have been recorded."
+            : "Payment successful — your order has been placed."}
         </p>
-        
+
         <div className="mt-6 rounded-lg bg-white/5 p-6 text-left">
           <h2 className="mb-3 text-lg font-semibold">What happens next?</h2>
-          <ul className="space-y-2 text-sm text-white/80">
-            <li className="flex items-start gap-2">
-              <span className="text-green-400">✓</span>
-              <span>Receipt sent to your email via Stripe</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-green-400">✓</span>
-              <span>Your raffle tickets have been assigned</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-yellow-400">⏳</span>
-              <span>Winner will be selected when the countdown ends</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-400">📧</span>
-              <span>We&apos;ll notify you immediately if you win!</span>
-            </li>
-          </ul>
+          {isRaffle ? (
+            <ul className="space-y-2 text-sm text-white/80">
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Receipt sent to your email via Stripe</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Your raffle tickets have been assigned</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-yellow-400">⏳</span>
+                <span>Winner will be selected when the countdown ends</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400">📧</span>
+                <span>We&apos;ll notify you immediately if you win!</span>
+              </li>
+            </ul>
+          ) : (
+            <ul className="space-y-2 text-sm text-white/80">
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Receipt sent to your email via Stripe</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Your order has been received and is being processed</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-yellow-400">📦</span>
+                <span>Please allow up to 4 weeks for delivery due to high demand</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-blue-400">📧</span>
+                <span>We&apos;ll send tracking info to your email when it ships</span>
+              </li>
+            </ul>
+          )}
         </div>
-        
+
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href="/shop"
@@ -78,11 +110,20 @@ export default function ThankYouPage() {
             Home
           </Link>
         </div>
-        
+
         <p className="mt-6 text-xs text-white/60">
-          Good luck! 🍀
+          {isRaffle ? "Good luck! 🍀" : "Thank you for your purchase! 🙏"}
         </p>
       </div>
     </main>
   );
 }
+
+export default function ThankYouPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">Loading...</div>}>
+      <ThankYouContent />
+    </Suspense>
+  );
+}
+

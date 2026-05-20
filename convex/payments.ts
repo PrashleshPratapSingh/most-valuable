@@ -2,8 +2,16 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 
-// Helper function to get product display name
 function getProductName(productId: string): string {
+  if (productId.startsWith("mv-v2-tee-")) {
+    const colors: Record<string, string> = {
+      "mv-v2-tee-1": "Black",
+      "mv-v2-tee-3": "Gold",
+      "mv-v2-tee-4": "Red",
+      "mv-v2-tee-5": "White",
+    };
+    return `A Valuable Shirt - ${colors[productId] || "Signature"}`;
+  }
   switch (productId) {
     case "mv-hoodie": return "MV Members Only Hoodie";
     case "mv-tee": return "MV Members Only Tee";
@@ -11,7 +19,10 @@ function getProductName(productId: string): string {
     case "p7": return "MV Traditional Hoodie";
     case "p1b": return "Box Logo Tee - Black";
     case "p1w": return "Box Logo Tee - White";
-    default: return "Product";
+    case "box-logo-zipper": return "Box Logo Zipper";
+    case "box-logo-beanie": return "Box Logo Beanie";
+    case "raffle": return "A Valuable Shirt";
+    default: return "Your Purchase";
   }
 }
 
@@ -61,7 +72,10 @@ export const createPendingEntry = mutation({
       productId === "p6" ||
       productId === "p7" ||
       productId === "p1b" ||
-      productId === "p1w";
+      productId === "p1w" ||
+      productId === "box-logo-zipper" ||
+      productId === "box-logo-beanie" ||
+      (productId?.startsWith("mv-v2-tee-") ?? false);
 
     let amount: number;
 
@@ -81,8 +95,12 @@ export const createPendingEntry = mutation({
         amount = 35000; // $350.00 in cents
       } else if (productId === "raffle") {
         amount = 10000; // $100.00 in cents
+      } else if (productId?.startsWith("mv-v2-tee-")) {
+        amount = 6500; // $65.00 in cents
+      } else if (productId === "box-logo-zipper" || productId === "box-logo-beanie") {
+        amount = 8500; // $85.00 in cents
       } else {
-        amount = 170000; // Default direct purchase price
+        amount = 6500; // Safe default for unknown direct products
       }
     } else {
       // Raffle entry pricing - need raffle config
@@ -185,7 +203,10 @@ export const handlePaymentSuccess = mutation({
       entry.productId === "p6" ||
       entry.productId === "p7" ||
       entry.productId === "p1b" ||
-      entry.productId === "p1w";
+      entry.productId === "p1w" ||
+      entry.productId === "box-logo-zipper" ||
+      entry.productId === "box-logo-beanie" ||
+      (entry.productId?.startsWith("mv-v2-tee-") ?? false);
 
     // Only update raffle entries for actual raffle purchases
     if (!isDirectPurchase) {

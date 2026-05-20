@@ -29,7 +29,7 @@ export function SubmitButton({
                         <span>Processing...</span>
                     </div>
                 ) : (
-                    `${buttonText} - $${price}`
+                    `${buttonText} - $${price.toLocaleString('en-US')}`
                 )}
             </button>
 
