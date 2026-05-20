@@ -49,13 +49,20 @@ export async function POST(req: Request) {
 
     const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
 
-    const isBundle = quantity === 4; // UI offers 1 or 4
+    // isBundle only makes sense for raffle entries (4-pack discount).
+    // Direct purchases never use bundle pricing regardless of quantity.
+    const isDirectPurchase = purchaseType === "direct" ||
+      (productId !== undefined && productId !== "" && productId !== null);
+    const isBundle = !isDirectPurchase && quantity === 4;
 
-    // TEMP workaround: Convex deployment still requires email; synthesize if absent
+    // Synthesize a guest email only if truly absent (form should always collect one)
     if (!email) {
       const ts = Date.now();
       email = `guest+${ts}@example.com`;
     }
+
+    // Append purchaseType to success URL so the thank-you page can show the right copy
+    const successUrl = `${origin}/thank-you?type=${isDirectPurchase ? "direct" : "raffle"}`;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await convex.action((api as unknown as any).stripeActions.createCheckoutSession, {
@@ -63,7 +70,7 @@ export async function POST(req: Request) {
       phone,
       count: quantity,
       bundle: isBundle,
-      successUrl: `${origin}/thank-you`,
+      successUrl,
       cancelUrl: `${origin}/shop`,
       ipAddress,
       // Product selection data

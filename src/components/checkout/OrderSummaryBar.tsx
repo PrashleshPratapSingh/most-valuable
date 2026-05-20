@@ -59,7 +59,7 @@ export function OrderSummaryBar({
                     </div>
 
                     <div className="text-right">
-                        <div className="text-2xl font-bold">${price}</div>
+                        <div className="text-2xl font-bold">${price.toLocaleString('en-US')}</div>
                         {isBundle && (
                             <div className="text-sm text-slate-400 line-through">$200</div>
                         )}

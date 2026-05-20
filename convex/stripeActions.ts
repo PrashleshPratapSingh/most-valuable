@@ -137,9 +137,10 @@ export const createCheckoutSession: any = action({
       }
     }
 
+    // Step 1: Create Stripe checkout session
+    let session: any;
     try {
-      // Create Stripe checkout session with mobile optimizations
-      const session = await stripe.checkout.sessions.create({
+      session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         mode: 'payment',
         success_url: args.successUrl,
@@ -155,7 +156,7 @@ export const createCheckoutSession: any = action({
               product_data: {
                 name: productName,
                 description: productDescription,
-                images: [], // Add product images if available
+                images: [],
               },
               unit_amount: unitAmount,
             },
@@ -174,11 +175,15 @@ export const createCheckoutSession: any = action({
           raffleId: isDirectPurchase ? 'none' : 'current',
         },
         expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
-        // Mobile compatibility settings
         locale: 'auto',
       });
+    } catch (error: any) {
+      console.error('Stripe checkout session creation failed:', error);
+      throw new Error(`Payment processing failed: ${error.message}`);
+    }
 
-      // Create pending entry in database
+    // Step 2: Record pending entry in DB (separate from Stripe so errors are clearly attributed)
+    try {
       await ctx.runMutation(api.payments.createPendingEntry, {
         email: args.email,
         phone: args.phone,
@@ -186,28 +191,26 @@ export const createCheckoutSession: any = action({
         bundle: args.bundle,
         stripeSessionId: session.id,
         ipAddress: args.ipAddress,
-        // Product selection data
         productId: args.productId,
         variantId: args.variantId,
         selectedColor: args.selectedColor,
         selectedSize: args.selectedSize,
-        // Shipping address
         shippingAddress: args.shippingAddress,
       });
-
-      console.log(`Created checkout session for ${args.email}: ${args.count} entries`);
-
-      return {
-        sessionId: session.id,
-        url: session.url,
-        amount: unitAmount,
-        count: args.count,
-      };
-
-    } catch (error: any) {
-      console.error('Stripe checkout session creation failed:', error);
-      throw new Error(`Payment processing failed: ${error.message}`);
+    } catch (dbError: any) {
+      // Log but don't fail — Stripe session exists, webhook will handle completion
+      console.error('Failed to record pending entry (Stripe session created):', session.id, dbError);
     }
+
+    console.log(`Created checkout session for ${args.email}: ${args.count} entries`);
+
+    return {
+      sessionId: session.id,
+      url: session.url,
+      amount: unitAmount,
+      count: args.count,
+    };
+
   },
 });
 

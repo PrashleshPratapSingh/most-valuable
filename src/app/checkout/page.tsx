@@ -55,7 +55,7 @@ function CheckoutPageContent() {
     quantity: productSelection.quantity,
   });
 
-  // Parse URL params on mount
+  // Parse URL params on mount, or fall back to cart in localStorage
   useEffect(() => {
     const qtyParam = searchParams.get("quantity");
     const productIdParam = searchParams.get("product");
@@ -64,14 +64,38 @@ function CheckoutPageContent() {
     const sizeParam = searchParams.get("size");
     const typeParam = searchParams.get("type");
 
-    setProductSelection({
-      productId: productIdParam || "",
-      variantId: variantIdParam || "",
-      selectedColor: colorParam || "",
-      selectedSize: sizeParam || "",
-      purchaseType: typeParam || "",
-      quantity: qtyParam ? parseInt(qtyParam, 10) || 1 : 1,
-    });
+    if (productIdParam) {
+      // Direct product link — use URL params as-is
+      setProductSelection({
+        productId: productIdParam,
+        variantId: variantIdParam || "",
+        selectedColor: colorParam || "",
+        selectedSize: sizeParam || "",
+        purchaseType: typeParam || "direct",
+        quantity: qtyParam ? parseInt(qtyParam, 10) || 1 : 1,
+      });
+    } else {
+      // Cart drawer checkout — reconstruct selection from the first cart item
+      const savedCart = localStorage.getItem("mv-cart");
+      if (savedCart) {
+        try {
+          const cart = JSON.parse(savedCart);
+          if (Array.isArray(cart) && cart.length > 0) {
+            const firstItem = cart[0];
+            setProductSelection({
+              productId: firstItem.id || "",
+              variantId: firstItem.id || "",
+              selectedColor: firstItem.color || "Default",
+              selectedSize: firstItem.size || "M",
+              purchaseType: "direct",
+              quantity: cart.length,
+            });
+          }
+        } catch {
+          // Silently ignore malformed cart data
+        }
+      }
+    }
   }, [searchParams]);
 
   // Checkout submission handler

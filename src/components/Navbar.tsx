@@ -14,7 +14,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cart, setCart] = useState<{ name: string; price: string; size: string; color: string }[]>([]);
+  const [cart, setCart] = useState<{ id: string; name: string; price: string; size: string; color: string }[]>([]);
 
   const loadCart = () => {
     if (typeof window !== "undefined") {
@@ -43,7 +43,20 @@ export default function Navbar() {
 
   const handleCheckout = () => {
     setIsCartOpen(false);
-    window.location.href = "/checkout";
+    if (cart.length > 0) {
+      const firstItem = cart[0];
+      const params = new URLSearchParams({
+        quantity: String(cart.length),
+        product: firstItem.id || "",
+        variant: firstItem.id || "",
+        color: firstItem.color || "Default",
+        size: firstItem.size || "M",
+        type: "direct",
+      });
+      window.location.href = `/checkout?${params.toString()}`;
+    } else {
+      window.location.href = "/checkout";
+    }
   };
 
   const removeFromCart = (index: number) => {

@@ -1,70 +1,71 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 
 export default function BrandVision() {
   return (
     <section 
       id="vision" 
-      className="w-full bg-[#0a0a0a] border-t border-white/5 py-24 sm:py-32 px-5 sm:px-12 flex flex-col items-center scroll-mt-24"
+      className="relative w-full bg-[#0a0a0a] overflow-hidden py-32 sm:py-48 px-6 sm:px-12 flex flex-col items-center scroll-mt-24"
     >
-      <div className="w-full max-w-[760px] mx-auto text-center">
+      {/* Subtle Background Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] pointer-events-none" />
+      
+      <div className="relative z-10 w-full max-w-[900px] mx-auto text-center">
         {/* Overline */}
-        <p className="text-white/30 text-[11px] tracking-[0.2em] uppercase font-medium mb-8">
-          THE VISION
-        </p>
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-white/30 text-[10px] tracking-[0.4em] uppercase font-medium mb-12"
+        >
+          The Vision
+        </motion.p>
 
-        {/* Quote Block */}
-        <div className="flex flex-col gap-2">
-          <h2 className="text-white font-bold leading-[1.15] tracking-tight" style={{ fontSize: "clamp(24px, 4vw, 42px)" }}>
-            Value isn&apos;t just what you wear.
-          </h2>
-          <h2 className="text-white font-bold leading-[1.15] tracking-tight" style={{ fontSize: "clamp(24px, 4vw, 42px)" }}>
-            It&apos;s what you embody.
-          </h2>
+        {/* Manifesto Content */}
+        <div className="flex flex-col gap-10">
+          <motion.h2 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="text-white font-light italic leading-[1.3] tracking-tight" 
+            style={{ fontSize: "clamp(28px, 5vw, 48px)", fontFamily: "var(--font-serif, serif)" }}
+          >
+            &quot;Perspective Creates Value.&quot;
+          </motion.h2>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.5, delay: 0.5 }}
+            className="w-16 h-[1px] bg-white/20 mx-auto"
+          />
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.8 }}
+            className="text-white/70 text-lg sm:text-2xl leading-[1.7] max-w-[800px] mx-auto font-extralight tracking-wide"
+          >
+            Most Valuable exists to remind people that <span className="text-white font-normal">perspective creates value</span>. 
+            A Valuable Shirt represents the belief that every individual view, story, and vision carries weight, 
+            because what you see, think, and bring to the world matters.
+          </motion.p>
         </div>
 
-        {/* Body Copy */}
-        <p className="text-white/55 text-[15px] leading-[1.8] max-w-[560px] mx-auto mt-8 font-light">
-          Most Valuable represents the intersection of luxury streetwear and tangible worth. Every piece in our collection contains real gold, bridging the gap between fashion and investment.
-        </p>
-
-        {/* Stats Row */}
-        <div className="mt-14 w-full flex flex-col sm:flex-row items-center justify-between border-y border-white/5 py-10 sm:py-12 gap-10 sm:gap-0">
-          {/* Stat 1: Dominant Gold Hero */}
-          <div className="flex-1 flex flex-col items-center">
-            <p className="text-[#C9972B] font-bold leading-none" style={{ fontSize: "clamp(36px, 5vw, 56px)" }}>
-              24K
-            </p>
-            <p className="text-white/35 text-[10px] tracking-[0.16em] uppercase mt-2 font-medium">
-              PURE GOLD
-            </p>
-          </div>
-
-          <div className="hidden sm:block h-16 w-[1px] bg-white/10" />
-
-          {/* Stat 2 */}
-          <div className="flex-1 flex flex-col items-center">
-            <p className="text-white font-bold leading-none" style={{ fontSize: "clamp(28px, 4vw, 44px)" }}>
-              100%
-            </p>
-            <p className="text-white/35 text-[10px] tracking-[0.16em] uppercase mt-2 font-medium">
-              PREMIUM COTTON
-            </p>
-          </div>
-
-          <div className="hidden sm:block h-16 w-[1px] bg-white/10" />
-
-          {/* Stat 3 */}
-          <div className="flex-1 flex flex-col items-center">
-            <p className="text-white font-bold leading-none" style={{ fontSize: "clamp(28px, 4vw, 44px)" }}>
-              1:1
-            </p>
-            <p className="text-white/35 text-[10px] tracking-[0.16em] uppercase mt-2 font-medium">
-              LIMITED PIECES
-            </p>
-          </div>
-        </div>
+        {/* Decorative Element */}
+        <motion.div 
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.5, delay: 1.2, ease: "circOut" }}
+          className="mt-24 h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        />
       </div>
     </section>
   );
